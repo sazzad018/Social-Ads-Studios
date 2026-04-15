@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import axios from 'axios';
 import { motion } from 'motion/react';
 import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,23 +10,29 @@ export default function Videos() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const qVideos = query(collection(db, 'videos'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(qVideos, (snapshot) => {
-      const dbVideos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (dbVideos.length === 0) {
-        setVideos([
-          { id: 'demo1', title: "Premium Fashion Shoot", url: "https://www.youtube.com/watch?v=ScMzIvxBSi4", format: "youtube", createdAt: Date.now() },
-          { id: 'demo2', title: "Product Showcase - Gadget", url: "https://www.youtube.com/watch?v=7yL1V6W0YpA", format: "reel", createdAt: Date.now() }
-        ]);
-      } else {
-        setVideos(dbVideos);
+    const fetchVideos = async () => {
+      try {
+        const response = await axios.get('/api/videos');
+        if (Array.isArray(response.data)) {
+          if (response.data.length === 0) {
+            setVideos([
+              { id: 'demo1', title: "Premium Fashion Shoot", url: "https://www.youtube.com/watch?v=ScMzIvxBSi4", format: "youtube", createdAt: Date.now() },
+              { id: 'demo2', title: "Product Showcase - Gadget", url: "https://www.youtube.com/watch?v=7yL1V6W0YpA", format: "reel", createdAt: Date.now() }
+            ]);
+          } else {
+            setVideos(response.data);
+          }
+        } else {
+          console.error('API returned non-array data for videos');
+        }
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'videos');
-    });
-
-    return () => unsubscribe();
+    };
+    
+    fetchVideos();
   }, []);
 
   const getFormatClasses = (format: string) => {

@@ -1,5 +1,4 @@
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import axios from "axios";
 
 interface TrackingSettings {
   fbPixelId?: string;
@@ -12,87 +11,102 @@ let settings: TrackingSettings | null = null;
 
 export async function initTracking() {
   try {
-    const docRef = doc(db, 'settings', 'tracking');
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      settings = docSnap.data() as TrackingSettings;
-      
+    const response = await axios.get("/api/settings/tracking_public");
+
+    if (response.data) {
+      settings = response.data as TrackingSettings;
+
       if (settings.fbPixelId) {
         injectFBPixel(settings.fbPixelId);
       }
-      
+
       if (settings.ga4MeasurementId) {
         injectGA4(settings.ga4MeasurementId);
       }
     }
   } catch (error) {
-    console.error('Error initializing tracking:', error);
+    console.error("Error initializing tracking:", error);
   }
 }
 
 function injectFBPixel(pixelId: string) {
   if (window.fbq) return;
-  
-  (function(f, b, e, v, n, t, s) {
-    if (f.fbq) return; n = f.fbq = function() {
+
+  (function (f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
     };
-    if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-    n.queue = []; t = b.createElement(e); t.async = !0;
-    t.src = v; s = b.getElementsByTagName(e)[0];
+    if (!f._fbq) f._fbq = n;
+    n.push = n;
+    n.loaded = !0;
+    n.version = "2.0";
+    n.queue = [];
+    t = b.createElement(e);
+    t.async = !0;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t, s);
-  })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-  
-  window.fbq('init', pixelId);
-  window.fbq('track', 'PageView');
+  })(
+    window,
+    document,
+    "script",
+    "https://connect.facebook.net/en_US/fbevents.js",
+  );
+
+  window.fbq("init", pixelId);
+  window.fbq("track", "PageView");
 }
 
 function injectGA4(measurementId: string) {
   if (window.gtag) return;
-  
-  const script = document.createElement('script');
+
+  const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
   document.head.appendChild(script);
-  
+
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function() {
+  window.gtag = function () {
     window.dataLayer.push(arguments);
   };
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId);
+  window.gtag("js", new Date());
+  window.gtag("config", measurementId);
 }
 
-export async function trackEvent(eventName: string, eventData: any = {}, userData: any = {}) {
+export async function trackEvent(
+  eventName: string,
+  eventData: any = {},
+  userData: any = {},
+) {
   // 1. Track with Facebook Pixel (Client-side)
   if (window.fbq) {
-    window.fbq('track', eventName, eventData);
+    window.fbq("track", eventName, eventData);
   }
-  
+
   // 2. Track with GA4 (Client-side)
   if (window.gtag && settings?.ga4MeasurementId) {
-    window.gtag('event', eventName, {
+    window.gtag("event", eventName, {
       ...eventData,
-      send_to: settings.ga4MeasurementId
+      send_to: settings.ga4MeasurementId,
     });
   }
-  
+
   // 3. Track with Facebook CAPI (Server-side)
   if (settings?.fbPixelId && settings?.fbAccessToken) {
     try {
-      fetch('/api/fb-capi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/fb-capi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventName,
           eventData,
           userData,
-          sourceUrl: window.location.href
-        })
-      }).catch(err => console.error('CAPI Error:', err));
+          sourceUrl: window.location.href,
+        }),
+      }).catch((err) => console.error("CAPI Error:", err));
     } catch (error) {
-      console.error('Error sending CAPI event:', error);
+      console.error("Error sending CAPI event:", error);
     }
   }
 }
