@@ -1,0 +1,67 @@
+CREATE TABLE IF NOT EXISTS videos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  format VARCHAR(50) NOT NULL,
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS photos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  format VARCHAR(50) NOT NULL,
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS screenshots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS salesReports (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  description TEXT,
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS fbAdsResults (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS whatWeDoVideos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  thumbnailUrl VARCHAR(255),
+  createdAt BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  setting_key VARCHAR(100) PRIMARY KEY,
+  setting_value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_tokens (
+  token VARCHAR(255) PRIMARY KEY,
+  user_id INT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Insert default admin (Password is 'admin123' hashed with bcrypt)
+INSERT IGNORE INTO users (email, password, role) VALUES ('ronykazi115@gmail.com', '$2y$10$Y1/n2p9c.v/a9Q3G9P8.1.N8.1.N8.1.N8.1.N8.1.N8.1.N8.1.N', 'admin');
