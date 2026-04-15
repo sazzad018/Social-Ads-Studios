@@ -11,12 +11,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require 'db.php';
 
-// Simple Router
+// Robust routing
 $request_uri = $_SERVER['REQUEST_URI'];
+$script_name = $_SERVER['SCRIPT_NAME'];
+
+// Extract the path part of the URI (ignore query string)
 $path = parse_url($request_uri, PHP_URL_PATH);
-// Remove the base directory if your API is in a subfolder, e.g., /api/
-$path = preg_replace('/^.*\/api\//', '', $path);
-$path = trim($path, '/'); // Remove leading/trailing slashes
+
+// Remove the script name from the path if it exists (e.g. /api/api.php/settings -> /settings)
+if (strpos($path, $script_name) === 0) {
+    $path = substr($path, strlen($script_name));
+} else {
+    // Fallback: if they are using URL rewriting (e.g., /api/settings -> /api/api.php)
+    // We can just look for the part after /api/
+    $path = preg_replace('/^.*api\.php\/?/', '', $path);
+    $path = preg_replace('/^.*\/api\//', '', $path);
+}
+
+$path = trim($path, '/');
 $parts = explode('/', $path);
 
 $endpoint = $parts[0] ?? '';
@@ -123,12 +135,71 @@ if (in_array($endpoint, $allowed_tables)) {
 
 // 4. FB CAPI Route
 if ($endpoint === 'fb-capi' && $method === 'POST') {
-    // Implement FB CAPI logic here using cURL instead of axios
-    // ...
-    echo json_encode(['success' => true]);
+    $eventName = $input['eventName'] ?? '';
+    $eventData = $input['eventData'] ?? [];
+    $userData = $input['userData'] ?? [];
+    $sourceUrl = $input['sourceUrl'] ?? 'https://socialaddstudio.com';
+
+    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'tracking_private'");
+    $stmt->execute();
+    $result = $stmt->fetch();
+    
+    if (!$result) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Tracking settings not found']);
+        exit;
+    }
+
+    $settings = json_decode($result['setting_value'], true);
+    $fbPixelId = $settings['fbPixelId'] ?? '';
+    $fbAccessToken = $settings['fbAccessToken'] ?? '';
+    $fbTestEventCode = $settings['fbTestEventCode'] ?? '';
+
+    if (!$fbPixelId || !$fbAccessToken) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Facebook Pixel ID or Access Token missing']);
+        exit;
+    }
+
+    $payload = [
+        'data' => [
+            [
+                'event_name' => $eventName,
+                'event_time' => time(),
+                'action_source' => 'website',
+                'event_source_url' => $sourceUrl,
+                'user_data' => array_merge([
+                    'client_ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+                    'client_user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? ''
+                ], $userData),
+                'custom_data' => $eventData
+            ]
+        ]
+    ];
+    
+    if ($fbTestEventCode) {
+        $payload['test_event_code'] = $fbTestEventCode;
+    }
+
+    $ch = curl_init("https://graph.facebook.com/v17.0/{$fbPixelId}/events?access_token={$fbAccessToken}");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode >= 200 && $httpCode < 300) {
+        echo json_encode(['success' => true, 'fbResponse' => json_decode($response)]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to send event to Facebook CAPI', 'details' => json_decode($response)]);
+    }
     exit;
 }
 
 http_response_code(404);
-echo json_encode(['error' => 'Endpoint not found']);
+echo json_encode(['error' => 'Endpoint not found', 'path' => $path, 'endpoint' => $endpoint]);
 ?>
