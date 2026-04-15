@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-500: #f59e0b; /* amber-500 for warm orange/gold accent */
+  --color-brand-600: #d97706;
+  --color-accent-500: #8b5cf6; /* Purple for studio vibe */
+  --color-cyan-500: #06b6d4; /* Cyan for studio vibe */
+  --color-rose-500: #f43f5e; /* Rose for studio vibe */
+  --animate-marquee: marquee 25s linear infinite;
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-zinc-950 text-zinc-50 antialiased;
+  }
+}

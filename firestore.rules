@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "goriberskincare@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidVideo(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0 &&
+             data.format in ['youtube', 'square', 'reel'] &&
+             data.createdAt is number;
+    }
+
+    function isValidPhoto(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0 &&
+             data.format in ['landscape', 'portrait', 'square'] &&
+             data.createdAt is number;
+    }
+
+    function isValidScreenshot(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0 &&
+             data.createdAt is number;
+    }
+
+    function isValidSalesReport(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0 &&
+             (data.description == null || (data.description is string && data.description.size() < 1000)) &&
+             data.createdAt is number;
+    }
+
+    function isValidFBAdsResult(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.url is string && data.url.size() > 0 &&
+             data.createdAt is number;
+    }
+
+    function isValidHeroVideo(data) {
+      return data.url is string && data.url.size() > 0 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() > 0;
+    }
+
+    function isValidTrackingPublic(data) {
+      return (data.pixelId == null || data.pixelId is string) &&
+             (data.ga4Id == null || data.ga4Id is string) &&
+             data.updatedAt is number;
+    }
+
+    function isValidTrackingPrivate(data) {
+      return (data.fbAccessToken == null || data.fbAccessToken is string) &&
+             data.updatedAt is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidVideo(request.resource.data);
+    }
+
+    match /photos/{photoId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidPhoto(request.resource.data);
+    }
+
+    match /screenshots/{screenshotId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidScreenshot(request.resource.data);
+    }
+
+    match /salesReports/{reportId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSalesReport(request.resource.data);
+    }
+
+    match /fbAdsResults/{resultId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidFBAdsResult(request.resource.data);
+    }
+
+    match /settings/heroVideo {
+      allow read: if true;
+      allow write: if isAdmin() && isValidHeroVideo(request.resource.data);
+    }
+
+    match /settings/tracking_public {
+      allow read: if true;
+      allow write: if isAdmin() && isValidTrackingPublic(request.resource.data);
+    }
+
+    match /settings/tracking_private {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidTrackingPrivate(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+  }
+}
