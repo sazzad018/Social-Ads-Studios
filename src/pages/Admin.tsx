@@ -68,7 +68,7 @@ export default function Admin() {
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       api
-        .get("/api/auth/me")
+        .get("/auth/me")
         .then((res) => setUser(res.data.user))
         .catch(() => {
           localStorage.removeItem("token");
@@ -82,14 +82,14 @@ export default function Admin() {
     try {
       const [vRes, pRes, sRes, srRes, fbRes, hRes, wRes, tRes] =
         await Promise.all([
-          api.get("/api/videos"),
-          api.get("/api/photos"),
-          api.get("/api/screenshots"),
-          api.get("/api/salesReports"),
-          api.get("/api/fbAdsResults"),
-          api.get("/api/settings/heroVideo"),
-          api.get("/api/whatWeDoVideos"),
-          api.get("/api/settings/tracking_private"),
+          api.get("/videos"),
+          api.get("/photos"),
+          api.get("/screenshots"),
+          api.get("/salesReports"),
+          api.get("/fbAdsResults"),
+          api.get("/settings/heroVideo"),
+          api.get("/whatWeDoVideos"),
+          api.get("/settings/tracking_private"),
         ]);
 
       if (Array.isArray(vRes.data)) setVideos(vRes.data);
@@ -125,7 +125,7 @@ export default function Admin() {
     e.preventDefault();
     setError("");
     try {
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       api.defaults.headers.common["Authorization"] =
         `Bearer ${res.data.token}`;
@@ -145,7 +145,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newVideo.title || !newVideo.url) return;
     try {
-      await api.post("/api/videos", { ...newVideo, createdAt: Date.now() });
+      await api.post("/videos", { ...newVideo, createdAt: Date.now() });
       setNewVideo({ title: "", url: "", format: "youtube" });
       fetchData();
     } catch (err) {
@@ -155,7 +155,7 @@ export default function Admin() {
 
   const handleDeleteVideo = async (id: string) => {
     try {
-      await api.delete(`/api/videos/${id}`);
+      await api.delete(`/videos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -166,7 +166,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newPhoto.title || !newPhoto.url) return;
     try {
-      await api.post("/api/photos", { ...newPhoto, createdAt: Date.now() });
+      await api.post("/photos", { ...newPhoto, createdAt: Date.now() });
       setNewPhoto({ title: "", url: "", format: "landscape" });
       fetchData();
     } catch (err) {
@@ -176,7 +176,7 @@ export default function Admin() {
 
   const handleDeletePhoto = async (id: string) => {
     try {
-      await api.delete(`/api/photos/${id}`);
+      await api.delete(`/photos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -187,7 +187,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newScreenshot.title || !newScreenshot.url) return;
     try {
-      await api.post("/api/screenshots", {
+      await api.post("/screenshots", {
         ...newScreenshot,
         createdAt: Date.now(),
       });
@@ -200,7 +200,7 @@ export default function Admin() {
 
   const handleDeleteScreenshot = async (id: string) => {
     try {
-      await api.delete(`/api/screenshots/${id}`);
+      await api.delete(`/screenshots/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -211,7 +211,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newSalesReport.title || !newSalesReport.url) return;
     try {
-      await api.post("/api/salesReports", {
+      await api.post("/salesReports", {
         ...newSalesReport,
         createdAt: Date.now(),
       });
@@ -224,7 +224,7 @@ export default function Admin() {
 
   const handleDeleteSalesReport = async (id: string) => {
     try {
-      await api.delete(`/api/salesReports/${id}`);
+      await api.delete(`/salesReports/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -235,7 +235,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newFBAdsResult.title || !newFBAdsResult.url) return;
     try {
-      await api.post("/api/fbAdsResults", {
+      await api.post("/fbAdsResults", {
         ...newFBAdsResult,
         createdAt: Date.now(),
       });
@@ -248,7 +248,7 @@ export default function Admin() {
 
   const handleDeleteFBAdsResult = async (id: string) => {
     try {
-      await api.delete(`/api/fbAdsResults/${id}`);
+      await api.delete(`/fbAdsResults/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -258,7 +258,7 @@ export default function Admin() {
   const handleSaveHeroVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/api/settings/heroVideo", {
+      await api.post("/settings/heroVideo", {
         ...newHeroVideo,
         updatedAt: Date.now(),
       });
@@ -278,7 +278,7 @@ export default function Admin() {
     )
       return;
     try {
-      await api.post("/api/whatWeDoVideos", {
+      await api.post("/whatWeDoVideos", {
         ...newWhatWeDoVideo,
         createdAt: Date.now(),
       });
@@ -292,7 +292,7 @@ export default function Admin() {
   const handleSaveTrackingSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/api/settings/tracking_private", {
+      await api.post("/settings/tracking_private", {
         ...trackingSettings,
         updatedAt: Date.now(),
       });
@@ -305,7 +305,7 @@ export default function Admin() {
 
   const handleDeleteWhatWeDoVideo = async (id: string) => {
     try {
-      await api.delete(`/api/whatWeDoVideos/${id}`);
+      await api.delete(`/whatWeDoVideos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -353,7 +353,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const p of demoPhotos) await api.post("/api/photos", p);
+      for (const p of demoPhotos) await api.post("/photos", p);
       alert("ডেমো ছবিগুলো সফলভাবে যুক্ত করা হয়েছে!");
       fetchData();
     } catch (err) {
@@ -385,7 +385,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const v of demoVideos) await api.post("/api/videos", v);
+      for (const v of demoVideos) await api.post("/videos", v);
 
       // Seed Photos
       const demoPhotos = [
@@ -426,7 +426,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const p of demoPhotos) await api.post("/api/photos", p);
+      for (const p of demoPhotos) await api.post("/photos", p);
 
       // Seed Screenshots
       const demoScreenshots = [
@@ -441,7 +441,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const s of demoScreenshots) await api.post("/api/screenshots", s);
+      for (const s of demoScreenshots) await api.post("/screenshots", s);
 
       // Seed Sales Reports
       const demoSales = [
@@ -452,7 +452,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const sr of demoSales) await api.post("/api/salesReports", sr);
+      for (const sr of demoSales) await api.post("/salesReports", sr);
 
       alert("ডেমো ডাটা সফলভাবে যুক্ত করা হয়েছে!");
       fetchData();

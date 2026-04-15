@@ -32,7 +32,7 @@ export const TrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await api.get("/api/settings/tracking_public");
+        const response = await api.get("/settings/tracking_public");
         if (response.data) {
           const data = response.data as TrackingSettings;
           setSettings(data);
@@ -115,7 +115,7 @@ export const TrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // 3. Server-side FB CAPI
     try {
-      await fetch("/api/fb-capi", {
+      await fetch("/fb-capi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventName, eventData, userData }),

@@ -11,7 +11,7 @@ let settings: TrackingSettings | null = null;
 
 export async function initTracking() {
   try {
-    const response = await api.get("/api/settings/tracking_public");
+    const response = await api.get("/settings/tracking_public");
 
     if (response.data) {
       settings = response.data as TrackingSettings;
@@ -95,7 +95,7 @@ export async function trackEvent(
   // 3. Track with Facebook CAPI (Server-side)
   if (settings?.fbPixelId && settings?.fbAccessToken) {
     try {
-      fetch("/api/fb-capi", {
+      fetch("/fb-capi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

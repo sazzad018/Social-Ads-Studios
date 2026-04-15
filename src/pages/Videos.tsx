@@ -12,7 +12,7 @@ export default function Videos() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await api.get('/api/videos');
+        const response = await api.get('/videos');
         if (Array.isArray(response.data)) {
           if (response.data.length === 0) {
             setVideos([

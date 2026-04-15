@@ -11,7 +11,7 @@ export default function Photos() {
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        const response = await api.get('/api/photos');
+        const response = await api.get('/photos');
         if (Array.isArray(response.data)) {
           if (response.data.length === 0) {
             setPhotos([

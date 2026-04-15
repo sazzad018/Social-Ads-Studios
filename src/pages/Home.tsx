@@ -36,7 +36,7 @@ function HeroSection() {
   useEffect(() => {
     const fetchHeroVideo = async () => {
       try {
-        const response = await api.get('/api/settings/heroVideo');
+        const response = await api.get('/settings/heroVideo');
         if (response.data) {
           setHeroVideo(response.data);
         }
@@ -266,7 +266,7 @@ function WhatWeDoSection() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await api.get('/api/whatWeDoVideos');
+        const response = await api.get('/whatWeDoVideos');
         const docs = response.data;
         if (Array.isArray(docs)) {
           setVideos(docs);
@@ -579,7 +579,7 @@ function ClientScreenshots() {
   useEffect(() => {
     const fetchScreenshots = async () => {
       try {
-        const response = await api.get('/api/screenshots');
+        const response = await api.get('/screenshots');
         setScreenshots(response.data);
       } catch (error) {
         console.error('Error fetching screenshots:', error);
@@ -629,7 +629,7 @@ function SalesReports() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await api.get('/api/salesReports');
+        const response = await api.get('/salesReports');
         setReports(response.data);
       } catch (error) {
         console.error('Error fetching sales reports:', error);
@@ -1335,7 +1335,7 @@ function FBAdsResultsSection() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await api.get('/api/fbAdsResults');
+        const response = await api.get('/fbAdsResults');
         if (Array.isArray(response.data)) {
           setResults(response.data);
         } else {
