@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/tracking';
@@ -9,33 +10,27 @@ export default function Photos() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPhotos = async () => {
-      try {
-        const response = await api.get('/photos');
-        if (Array.isArray(response.data)) {
-          if (response.data.length === 0) {
-            setPhotos([
-              { id: 'demo1', title: "Elegant Watch", url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30", format: "landscape", createdAt: Date.now() },
-              { id: 'demo2', title: "Fashion Model", url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab", format: "portrait", createdAt: Date.now() },
-              { id: 'demo3', title: "Modern Workspace", url: "https://images.unsplash.com/photo-1497366216548-37526070297c", format: "landscape", createdAt: Date.now() },
-              { id: 'demo4', title: "Luxury Perfume", url: "https://images.unsplash.com/photo-1541643600914-78b084683601", format: "portrait", createdAt: Date.now() },
-              { id: 'demo5', title: "Gourmet Food", url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836", format: "landscape", createdAt: Date.now() },
-              { id: 'demo6', title: "Tech Gadgets", url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c", format: "square", createdAt: Date.now() }
-            ]);
-          } else {
-            setPhotos(response.data);
-          }
-        } else {
-          console.error('API returned non-array data for photos');
-        }
-      } catch (error) {
-        console.error('Error fetching photos:', error);
-      } finally {
-        setLoading(false);
+    const qPhotos = query(collection(db, 'photos'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(qPhotos, (snapshot) => {
+      const dbPhotos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (dbPhotos.length === 0) {
+        setPhotos([
+          { id: 'demo1', title: "Elegant Watch", url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30", format: "landscape", createdAt: Date.now() },
+          { id: 'demo2', title: "Fashion Model", url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab", format: "portrait", createdAt: Date.now() },
+          { id: 'demo3', title: "Modern Workspace", url: "https://images.unsplash.com/photo-1497366216548-37526070297c", format: "landscape", createdAt: Date.now() },
+          { id: 'demo4', title: "Luxury Perfume", url: "https://images.unsplash.com/photo-1541643600914-78b084683601", format: "portrait", createdAt: Date.now() },
+          { id: 'demo5', title: "Gourmet Food", url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836", format: "landscape", createdAt: Date.now() },
+          { id: 'demo6', title: "Tech Gadgets", url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c", format: "square", createdAt: Date.now() }
+        ]);
+      } else {
+        setPhotos(dbPhotos);
       }
-    };
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'photos');
+    });
 
-    fetchPhotos();
+    return () => unsubscribe();
   }, []);
 
   const getFormatClasses = (format: string) => {

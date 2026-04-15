@@ -1,6 +1,3 @@
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-
 interface TrackingSettings {
   fbPixelId?: string;
   fbAccessToken?: string;
@@ -12,17 +9,15 @@ let settings: TrackingSettings | null = null;
 
 export async function initTracking() {
   try {
-    const docRef = doc(db, 'settings', 'tracking');
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      settings = docSnap.data() as TrackingSettings;
+    const response = await fetch('/api/settings.php');
+    if (response.ok) {
+      settings = await response.json();
       
-      if (settings.fbPixelId) {
+      if (settings?.fbPixelId) {
         injectFBPixel(settings.fbPixelId);
       }
       
-      if (settings.ga4MeasurementId) {
+      if (settings?.ga4MeasurementId) {
         injectGA4(settings.ga4MeasurementId);
       }
     }
@@ -34,7 +29,7 @@ export async function initTracking() {
 function injectFBPixel(pixelId: string) {
   if (window.fbq) return;
   
-  (function(f, b, e, v, n, t, s) {
+  (function(f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
     if (f.fbq) return; n = f.fbq = function() {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
     };
@@ -65,12 +60,10 @@ function injectGA4(measurementId: string) {
 }
 
 export async function trackEvent(eventName: string, eventData: any = {}, userData: any = {}) {
-  // 1. Track with Facebook Pixel (Client-side)
   if (window.fbq) {
     window.fbq('track', eventName, eventData);
   }
   
-  // 2. Track with GA4 (Client-side)
   if (window.gtag && settings?.ga4MeasurementId) {
     window.gtag('event', eventName, {
       ...eventData,
@@ -78,10 +71,9 @@ export async function trackEvent(eventName: string, eventData: any = {}, userDat
     });
   }
   
-  // 3. Track with Facebook CAPI (Server-side)
   if (settings?.fbPixelId && settings?.fbAccessToken) {
     try {
-      fetch('/api/fb-capi', {
+      fetch('/api/fb-capi.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +89,6 @@ export async function trackEvent(eventName: string, eventData: any = {}, userDat
   }
 }
 
-// Global type definitions for tracking scripts
 declare global {
   interface Window {
     fbq: any;

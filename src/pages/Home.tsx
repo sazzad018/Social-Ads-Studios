@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../lib/api';
 import { Play, CheckCircle2, ArrowRight, Camera, Video, Clapperboard, MonitorPlay, PenTool, Scissors, TrendingUp, Layout, MessageCircle, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { doc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { trackEvent } from '../lib/tracking';
 
 export default function Home() {
@@ -34,17 +35,14 @@ function HeroSection() {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
-    const fetchHeroVideo = async () => {
-      try {
-        const response = await api.get('/settings/heroVideo');
-        if (response.data) {
-          setHeroVideo(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching hero video:', error);
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'heroVideo'), (docSnap) => {
+      if (docSnap.exists()) {
+        setHeroVideo(docSnap.data());
       }
-    };
-    fetchHeroVideo();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/heroVideo');
+    });
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -264,23 +262,17 @@ function WhatWeDoSection() {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const response = await api.get('/whatWeDoVideos');
-        const docs = response.data;
-        if (Array.isArray(docs)) {
-          setVideos(docs);
-          if (docs.length > 0 && !activeVideo) {
-            setActiveVideo(docs[0]);
-          }
-        } else {
-          console.error('API returned non-array data for whatWeDoVideos:', docs);
-        }
-      } catch (error) {
-        console.error('Error fetching what we do videos:', error);
+    const q = query(collection(db, 'whatWeDoVideos'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setVideos(docs);
+      if (docs.length > 0 && !activeVideo) {
+        setActiveVideo(docs[0]);
       }
-    };
-    fetchVideos();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'whatWeDoVideos');
+    });
+    return () => unsubscribe();
   }, [activeVideo]);
 
   const services = [
@@ -577,15 +569,13 @@ function ClientScreenshots() {
   const [screenshots, setScreenshots] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchScreenshots = async () => {
-      try {
-        const response = await api.get('/screenshots');
-        setScreenshots(response.data);
-      } catch (error) {
-        console.error('Error fetching screenshots:', error);
-      }
-    };
-    fetchScreenshots();
+    const q = query(collection(db, 'screenshots'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setScreenshots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'screenshots');
+    });
+    return () => unsubscribe();
   }, []);
 
   if (screenshots.length === 0) return null;
@@ -627,15 +617,13 @@ function SalesReports() {
   const [reports, setReports] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const response = await api.get('/salesReports');
-        setReports(response.data);
-      } catch (error) {
-        console.error('Error fetching sales reports:', error);
-      }
-    };
-    fetchReports();
+    const q = query(collection(db, 'salesReports'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setReports(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'salesReports');
+    });
+    return () => unsubscribe();
   }, []);
 
   if (reports.length === 0) return null;
@@ -1333,19 +1321,13 @@ function FBAdsResultsSection() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const response = await api.get('/fbAdsResults');
-        if (Array.isArray(response.data)) {
-          setResults(response.data);
-        } else {
-          console.warn("API returned non-array data for FB Ads Results, using demo data");
-        }
-      } catch (error) {
-        console.warn("API not connected, using demo data for FB Ads Results");
-      }
-    };
-    fetchResults();
+    const q = query(collection(db, 'fbAdsResults'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setResults(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      console.warn("Firestore not connected, using demo data for FB Ads Results");
+    });
+    return () => unsubscribe();
   }, []);
 
   const demoResults = [
