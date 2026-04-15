@@ -67,7 +67,7 @@ export default function Admin() {
     const token = localStorage.getItem("token");
     if (token) {
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      axios
+      api
         .get("/api/auth/me")
         .then((res) => setUser(res.data.user))
         .catch(() => {
@@ -137,7 +137,7 @@ export default function Admin() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    delete axios.defaults.headers.common["Authorization"];
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
@@ -353,7 +353,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const p of demoPhotos) await axios.post("/api/photos", p);
+      for (const p of demoPhotos) await api.post("/api/photos", p);
       alert("ডেমো ছবিগুলো সফলভাবে যুক্ত করা হয়েছে!");
       fetchData();
     } catch (err) {
@@ -385,7 +385,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const v of demoVideos) await axios.post("/api/videos", v);
+      for (const v of demoVideos) await api.post("/api/videos", v);
 
       // Seed Photos
       const demoPhotos = [
@@ -426,7 +426,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const p of demoPhotos) await axios.post("/api/photos", p);
+      for (const p of demoPhotos) await api.post("/api/photos", p);
 
       // Seed Screenshots
       const demoScreenshots = [
@@ -441,7 +441,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const s of demoScreenshots) await axios.post("/api/screenshots", s);
+      for (const s of demoScreenshots) await api.post("/api/screenshots", s);
 
       // Seed Sales Reports
       const demoSales = [
@@ -452,7 +452,7 @@ export default function Admin() {
           createdAt: Date.now(),
         },
       ];
-      for (const sr of demoSales) await axios.post("/api/salesReports", sr);
+      for (const sr of demoSales) await api.post("/api/salesReports", sr);
 
       alert("ডেমো ডাটা সফলভাবে যুক্ত করা হয়েছে!");
       fetchData();

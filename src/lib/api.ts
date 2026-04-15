@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 
 // Configure axios to use the PHP API directly if .htaccess fails
