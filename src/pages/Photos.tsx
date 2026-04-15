@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/tracking';
@@ -11,7 +11,7 @@ export default function Photos() {
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        const response = await axios.get('/api/photos');
+        const response = await api.get('/api/photos');
         if (Array.isArray(response.data)) {
           if (response.data.length === 0) {
             setPhotos([

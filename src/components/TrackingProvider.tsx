@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 
 interface TrackingSettings {
   pixelId: string;
@@ -32,7 +32,7 @@ export const TrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await axios.get("/api/settings/tracking_public");
+        const response = await api.get("/api/settings/tracking_public");
         if (response.data) {
           const data = response.data as TrackingSettings;
           setSettings(data);

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "./api";
 
 interface TrackingSettings {
   fbPixelId?: string;
@@ -11,7 +11,7 @@ let settings: TrackingSettings | null = null;
 
 export async function initTracking() {
   try {
-    const response = await axios.get("/api/settings/tracking_public");
+    const response = await api.get("/api/settings/tracking_public");
 
     if (response.data) {
       settings = response.data as TrackingSettings;

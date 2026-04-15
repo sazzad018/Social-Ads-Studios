@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../lib/api";
 import {
   Trash2,
   Plus,
@@ -66,13 +66,13 @@ export default function Admin() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       axios
         .get("/api/auth/me")
         .then((res) => setUser(res.data.user))
         .catch(() => {
           localStorage.removeItem("token");
-          delete axios.defaults.headers.common["Authorization"];
+          delete api.defaults.headers.common["Authorization"];
         });
     }
   }, []);
@@ -82,14 +82,14 @@ export default function Admin() {
     try {
       const [vRes, pRes, sRes, srRes, fbRes, hRes, wRes, tRes] =
         await Promise.all([
-          axios.get("/api/videos"),
-          axios.get("/api/photos"),
-          axios.get("/api/screenshots"),
-          axios.get("/api/salesReports"),
-          axios.get("/api/fbAdsResults"),
-          axios.get("/api/settings/heroVideo"),
-          axios.get("/api/whatWeDoVideos"),
-          axios.get("/api/settings/tracking_private"),
+          api.get("/api/videos"),
+          api.get("/api/photos"),
+          api.get("/api/screenshots"),
+          api.get("/api/salesReports"),
+          api.get("/api/fbAdsResults"),
+          api.get("/api/settings/heroVideo"),
+          api.get("/api/whatWeDoVideos"),
+          api.get("/api/settings/tracking_private"),
         ]);
 
       if (Array.isArray(vRes.data)) setVideos(vRes.data);
@@ -125,9 +125,9 @@ export default function Admin() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("/api/auth/login", { email, password });
+      const res = await api.post("/api/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
-      axios.defaults.headers.common["Authorization"] =
+      api.defaults.headers.common["Authorization"] =
         `Bearer ${res.data.token}`;
       setUser(res.data.user);
     } catch (err: any) {
@@ -145,7 +145,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newVideo.title || !newVideo.url) return;
     try {
-      await axios.post("/api/videos", { ...newVideo, createdAt: Date.now() });
+      await api.post("/api/videos", { ...newVideo, createdAt: Date.now() });
       setNewVideo({ title: "", url: "", format: "youtube" });
       fetchData();
     } catch (err) {
@@ -155,7 +155,7 @@ export default function Admin() {
 
   const handleDeleteVideo = async (id: string) => {
     try {
-      await axios.delete(`/api/videos/${id}`);
+      await api.delete(`/api/videos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -166,7 +166,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newPhoto.title || !newPhoto.url) return;
     try {
-      await axios.post("/api/photos", { ...newPhoto, createdAt: Date.now() });
+      await api.post("/api/photos", { ...newPhoto, createdAt: Date.now() });
       setNewPhoto({ title: "", url: "", format: "landscape" });
       fetchData();
     } catch (err) {
@@ -176,7 +176,7 @@ export default function Admin() {
 
   const handleDeletePhoto = async (id: string) => {
     try {
-      await axios.delete(`/api/photos/${id}`);
+      await api.delete(`/api/photos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -187,7 +187,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newScreenshot.title || !newScreenshot.url) return;
     try {
-      await axios.post("/api/screenshots", {
+      await api.post("/api/screenshots", {
         ...newScreenshot,
         createdAt: Date.now(),
       });
@@ -200,7 +200,7 @@ export default function Admin() {
 
   const handleDeleteScreenshot = async (id: string) => {
     try {
-      await axios.delete(`/api/screenshots/${id}`);
+      await api.delete(`/api/screenshots/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -211,7 +211,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newSalesReport.title || !newSalesReport.url) return;
     try {
-      await axios.post("/api/salesReports", {
+      await api.post("/api/salesReports", {
         ...newSalesReport,
         createdAt: Date.now(),
       });
@@ -224,7 +224,7 @@ export default function Admin() {
 
   const handleDeleteSalesReport = async (id: string) => {
     try {
-      await axios.delete(`/api/salesReports/${id}`);
+      await api.delete(`/api/salesReports/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -235,7 +235,7 @@ export default function Admin() {
     e.preventDefault();
     if (!newFBAdsResult.title || !newFBAdsResult.url) return;
     try {
-      await axios.post("/api/fbAdsResults", {
+      await api.post("/api/fbAdsResults", {
         ...newFBAdsResult,
         createdAt: Date.now(),
       });
@@ -248,7 +248,7 @@ export default function Admin() {
 
   const handleDeleteFBAdsResult = async (id: string) => {
     try {
-      await axios.delete(`/api/fbAdsResults/${id}`);
+      await api.delete(`/api/fbAdsResults/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -258,7 +258,7 @@ export default function Admin() {
   const handleSaveHeroVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("/api/settings/heroVideo", {
+      await api.post("/api/settings/heroVideo", {
         ...newHeroVideo,
         updatedAt: Date.now(),
       });
@@ -278,7 +278,7 @@ export default function Admin() {
     )
       return;
     try {
-      await axios.post("/api/whatWeDoVideos", {
+      await api.post("/api/whatWeDoVideos", {
         ...newWhatWeDoVideo,
         createdAt: Date.now(),
       });
@@ -292,7 +292,7 @@ export default function Admin() {
   const handleSaveTrackingSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("/api/settings/tracking_private", {
+      await api.post("/api/settings/tracking_private", {
         ...trackingSettings,
         updatedAt: Date.now(),
       });
@@ -305,7 +305,7 @@ export default function Admin() {
 
   const handleDeleteWhatWeDoVideo = async (id: string) => {
     try {
-      await axios.delete(`/api/whatWeDoVideos/${id}`);
+      await api.delete(`/api/whatWeDoVideos/${id}`);
       fetchData();
     } catch (err) {
       console.error(err);

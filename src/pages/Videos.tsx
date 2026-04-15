@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 import { motion } from 'motion/react';
 import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,7 @@ export default function Videos() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await axios.get('/api/videos');
+        const response = await api.get('/api/videos');
         if (Array.isArray(response.data)) {
           if (response.data.length === 0) {
             setVideos([

@@ -16,6 +16,7 @@ $request_uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($request_uri, PHP_URL_PATH);
 // Remove the base directory if your API is in a subfolder, e.g., /api/
 $path = preg_replace('/^.*\/api\//', '', $path);
+$path = trim($path, '/'); // Remove leading/trailing slashes
 $parts = explode('/', $path);
 
 $endpoint = $parts[0] ?? '';
